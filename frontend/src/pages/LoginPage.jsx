@@ -2,7 +2,7 @@ import { Login } from "../Routes";
 
 const LoginPage = () => {
   return (
-    <div>
+    <div className="">
       <Login />
     </div>
   );
