@@ -96,4 +96,46 @@ const activateUser = catchAsyncError(async (req, res, next) => {
   }
 });
 
-module.exports = { createUser, activateUser };
+// log in user
+const loginUser = catchAsyncError(async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next(new ErrorHandler("Please enter all the fields", 400));
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return next(new ErrorHandler("Please provide the correct details", 400));
+    }
+
+    sendToken(user, 201, res);
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+});
+
+// load user
+const getUser = catchAsyncError(async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return next(new ErrorHandler("User doesn't exists", 400));
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+});
+
+module.exports = { createUser, activateUser, loginUser, getUser };
