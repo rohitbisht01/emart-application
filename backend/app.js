@@ -1,19 +1,24 @@
 const express = require("express");
-const errorHandler = require("./utils/ErrorHandler");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
+const errorHandler = require("./middleware/error");
+const userRouter = require("./router/userRoute");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-app.use(fileUpload({ useTempFiles: true }));
+app.use("/", express.static("uploads"));
 
 if (process.env.NODE_ENV !== "PRODUCTION") {
   require("dotenv").config({
     path: "backend/config/.env",
   });
 }
+
+// routes
+app.use("/api/v2/user", userRouter);
 
 // error handler
 app.use(errorHandler);

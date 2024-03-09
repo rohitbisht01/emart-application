@@ -46,15 +46,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  // avatar: {
+  //   public_id: {
+  //     type: String,
+  //     required: true,
+  //   },
+  //   url: {
+  //     type: String,
+  //     required: true,
+  //   },
+  // },
   avatar: {
-    public_id: {
-      type: String,
-      required: true,
-    },
-    url: {
-      type: String,
-      required: true,
-    },
+    type: String,
   },
   createdAt: {
     type: Date,
@@ -66,9 +69,26 @@ const userSchema = new mongoose.Schema({
 });
 
 // hash password before updating in db
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  const hashedPassword = await bcrypt.hash(this.password, 10);
+  this.password = hashedPassword;
+  next();
+});
 
 // jwt token
+userSchema.methods.getJwtToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "5m",
+  });
+};
 
 // compare password
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(this.password, enteredPassword);
+};
 
 module.exports = mongoose.model("User", userSchema);
